@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
+import plotly.graph_objects as go
 from datetime import timedelta
 from app.pricing_engine import simulate_price
 from app.config import BASE_PRICE_FILE
@@ -81,6 +80,7 @@ if simulate_btn or submit_validation:
         diff = ((h0_price - result["final_price"]) / h0_price) * 100
         st.write(f"Difference vs H-0: {diff:.2f}%")
 
+    # Build price evolution window
     window_dates = []
     prices = []
 
@@ -96,30 +96,39 @@ if simulate_btn or submit_validation:
         prices.append(sim["final_price"])
         current += timedelta(days=1)
 
-    plt.style.use("dark_background")
-    fig, ax = plt.subplots(figsize=(10, 5))
+    # Plotly chart (dark theme similar to matplotlib dark_background)
+    fig = go.Figure()
 
-    ax.plot(window_dates, prices, linewidth=2.5)
-    ax.scatter(purchase_date, result["final_price"], s=100)
+    fig.add_trace(
+        go.Scatter(
+            x=window_dates,
+            y=prices,
+            mode="lines",
+            line=dict(width=3),
+            name="Simulated Price"
+        )
+    )
 
-    ax.set_title("Price Evolution Until Departure")
-    ax.set_xlabel("Purchase Date")
-    ax.set_ylabel("Simulated Price (IDR)")
+    fig.add_trace(
+        go.Scatter(
+            x=[purchase_date],
+            y=[result["final_price"]],
+            mode="markers",
+            marker=dict(size=12),
+            name="Selected Purchase Date"
+        )
+    )
 
-    total_days = len(window_dates)
+    fig.update_layout(
+        title="Price Evolution Until Departure",
+        xaxis_title="Purchase Date",
+        yaxis_title="Simulated Price (IDR)",
+        template="plotly_dark",
+        margin=dict(l=20, r=20, t=50, b=20),
+        height=450
+    )
 
-    if total_days <= 10:
-        ax.xaxis.set_major_locator(mdates.DayLocator())
-    elif total_days <= 40:
-        ax.xaxis.set_major_locator(mdates.DayLocator(interval=3))
-    else:
-        ax.xaxis.set_major_locator(mdates.WeekdayLocator())
-
-    ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
-    fig.autofmt_xdate()
-    ax.grid(alpha=0.15)
-
-    st.pyplot(fig)
+    st.plotly_chart(fig, use_container_width=True)
 
     if submit_validation and realtime_price > 0:
         implied_multiplier = realtime_price / result["base_price"]

@@ -222,7 +222,7 @@ if simulate_btn or submit_validation:
 st.markdown(
     "<div style='position: fixed; bottom: 12px; left: 20px; "
     "font-size: 11px; color: rgba(255,255,255,0.25);'>"
-    "Airline Pricing Simulation Model | Portfolio Project"
+    "Airline Pricing Simulation Model | a portfolio by tianyus"
     "</div>",
     unsafe_allow_html=True
 )
